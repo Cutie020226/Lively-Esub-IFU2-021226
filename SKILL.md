@@ -1,322 +1,310 @@
-# SKILL.md – Agentic Medical Device Reviewer（FDA / TFDA 審查官輔助）
+# SKILL.md — Agent Skills & System Prompt Library（繁體中文）
 
-> 本系統主要協助 **FDA 510(k)** 與 **臺灣 TFDA 第二、三等級醫療器材查驗登記** 之審查官與顧問，
-> 透過多代理 (agents) + 多模型 (OpenAI / Gemini / Anthropic / Grok) 的方式，加速文件整理、審查規劃與紀錄撰寫。
-
----
-
-## 1. 系統總覽
-
-### 1.1 主要特色
-
-- **WOW UI**  
-  - Light / Dark 主題切換  
-  - 英文 / 繁體中文介面  
-  - 20 種「大師畫風」背景（Van Gogh、Monet、Picasso…），可用「Jackpot!」隨機抽選  
-- **多模型路由**  
-  - OpenAI：`gpt-4o-mini`, `gpt-4.1-mini`  
-  - Google Gemini：`gemini-2.5-flash`, `gemini-2.5-flash-lite`  
-  - Anthropic：`claude-3-5-sonnet-2024-10`, `claude-3-5-haiku-20241022`  
-  - Grok (xAI)：`grok-4-fast-reasoning`, `grok-3-mini`  
-- **API Key 管理**  
-  - 若環境變數已設定，sidebar 只顯示「from environment」提示，不顯示明文 key  
-  - 若未設定，可在 sidebar 輸入各家 API key，僅存在本次 session 記憶體  
-- **Agentic Workflow**  
-  - 每個 agent 皆可：  
-    - 選擇模型  
-    - 調整 `max_tokens`（預設 12000，可到 120k）  
-    - 修改 prompt  
-    - 在 UI 編輯輸出內容，作為下一個 agent 的輸入  
-- **Dashboard**：  
-  - 顯示各 tab / agent / model 的呼叫歷史與估算 tokens  
-  - 以 Altair 圖表呈現使用趨勢  
+## SKILL:GLOBAL_GUARDRAILS
+**目的**：統一所有代理的安全與可信輸出規範。  
+**硬性規則**：
+1. **不得捏造**：不可自行補寫測試結果、核准結論、適應症、標準符合性聲明；缺資訊必須標示「未提供/需確認」。
+2. **可追溯**：重要判斷需可追溯到輸入（用引用片段、段落定位、或「依輸入描述」註記）。
+3. **區分事實與建議**：事實（輸入已有） vs 建議（審查需求、補件）必須分開寫。
+4. **中立審查語氣**：避免「已通過、必然可過」等承諾性語句。
+5. **輸出優先 Markdown**：標題、表格、清單；必要時加「缺口/風險/提問」章節。
+6. **隱私**：若輸入包含 API key 或敏感個資，提醒使用者移除；不要在輸出重複敏感值。
 
 ---
 
-## 2. 頁面 (Tabs) 功能說明
-
-### 2.1 Dashboard
-
-- 顯示：
-  - 總執行次數
-  - 各 tab 的呼叫分佈
-  - 各模型使用次數
-  - Tokens 使用量時間序列
-  - 最近活動表（前 25 次呼叫紀錄）
-
-### 2.2 TW Premarket – TFDA 第二、三等級查驗登記預審
-
-**目標對象：TFDA / 顧問 / 申請人**
-
-#### Step 1 – 線上填寫申請書（草稿）
-
-- 在畫面中輸入：
-  - 案件基本資料（案件類型、產地、產品等級、有無類似品、替代條款）  
-  - 醫療器材基本資訊（中文/英文名稱、適應症、型號/主要成分）  
-  - 分類分級品項（主類別、A.xxxx 品項代碼與名稱）  
-  - 醫療器材商資料（統一編號、名稱、地址、負責人、聯絡人等）  
-  - 製造廠資訊（名稱、國別、地址、是否委託製造）  
-  - 臨床前測試、品質管制、臨床證據等附件的「文字摘要」  
-- 一鍵產生：**Markdown 版申請書草稿**（可下載/複製/再編輯）。
-
-#### Step 2 – 輸入預審/形式審查指引
-
-- 支援：
-  - 上傳 PDF / TXT / MD 指引檔案  
-  - 直接貼上指引文字  
-- 系統整合成一段文字，供預審代理參考。
-
-#### Step 3 – 形式審查 / 完整性檢核（Agent：`tw_screen_review_agent`）
-
-- 使用者可：
-  - 選擇模型（預設 `gemini-2.5-flash`）  
-  - 調整 max_tokens 與 prompt  
-- 輸入為：
-  - 申請書 Markdown + 預審指引  
-- 輸出為：
-  - Markdown 預審報告（有表格 + 評語），並支援編輯與後續串接。
-
-#### Step 4 – 申請書文字優化（Agent：`tw_app_doc_helper`）
-
-- 將申請書 Markdown 作為輸入，進行：
-  - 結構與標題層級優化  
-  - 文句修飾  
-  - 以「※待補：...」標註明顯不足之處  
-- 適合用於：
-  - 產出更乾淨版本再轉 PDF/Word  
-  - 作為補件回覆草稿基礎（可自行調整 prompt 要求）
+## SKILL:OUTPUT_MARKDOWN_STANDARD
+**目的**：建立一致的輸出版型，方便在系統內串接與編修。  
+**建議結構**（可依任務裁切）：
+- `# 摘要`
+- `## 輸入假設/已知條件`
+- `## 審查要點`
+- `## 證據/文件對照（表格）`
+- `## 缺口與風險`
+- `## 對申請者問題清單`
+- `## 建議下一步`
 
 ---
 
-### 2.3 510(k) Tab – FDA 510(k) Intelligence
-
-- 輸入：
-  - Device name, 510(k) number, sponsor, product code, additional context  
-- 預設 Agent：`fda_510k_intel_agent`  
-- 輸出：
-  - 長篇 510(k) 情資摘要，含多個 markdown 表格  
-- 適用：
-  - 審查前快速建立「該案/類似案」的背景認知  
-  - 顧問側準備 pre-sub 或 510(k) package 時作內部分析草稿  
+## SKILL:OUTPUT_TABLE_CHECKLIST
+**目的**：把檢核事項表格化，利於 RTA/缺口審查。  
+**表格欄位建議**：
+- 項目 / 預期內容 / 證據（有/疑似/未見）/ 缺口描述 / 需補文件或數據 / 優先級（高/中/低）
 
 ---
 
-### 2.4 PDF → Markdown
-
-- 上傳 PDF，指定起迄頁，先由 `pypdf` 擷取文字。  
-- 使用 Agent：`pdf_to_markdown_agent` 將原始文字整理為乾淨 Markdown。  
-- 適用：
-  - 將舊版紙本審查紀錄/指南數位化  
-  - 將申請書附件轉為可供 LLM 後續分析的格式  
-
----
-
-### 2.5 510(k) Review Pipeline（簡化版）
-
-- Step 1：提交資料 → 結構化 Markdown  
-  - 將貼上的 510(k) 提交文件以 LLM 重組，分章節頁面。  
-- Step 2：Checklist（手工或由 `guidance_to_checklist_converter` 產出）  
-- Step 3：Review Memo  
-  - 以結構化提交資料與 Checklist 為輸入，使用 `review_memo_builder`（或預設模型）產出審查報告草稿。  
+## SKILL:FDA_510K_OVERVIEW
+**目的**：510(k) 審查全局化整理。  
+**輸出必含**：
+- Device 概觀（名稱、用途、技術概要）
+- Predicate/比較思路（若缺則列需補）
+- 測試與證據大類（Bench/Software/Clinical/Labeling/Risk）
+- Top 缺口與風險（可審查角度）
 
 ---
 
-### 2.6 Note Keeper & Magics
-
-專為審查官的個人筆記設計。
-
-#### Step 1 – Note → Structured Markdown
-
-- Agent：`note_structurer_agent`  
-- 將雜亂筆記整理為：
-  - 產品與案件概述  
-  - 風險/疑慮  
-  - 測試與資料  
-  - 待辦/補件  
-
-#### Magic 1 – AI Formatting
-
-- Agent：`note_ai_formatting_agent`  
-- 不改變內容，僅優化標題層級、分段與條列。
-
-#### Magic 2 – AI Keywords + 手動顏色標註
-
-- LLM 版：`note_keywords_agent` 建議關鍵字與顏色。  
-- UI 版：輸入關鍵字（逗號分隔）+ 選色，系統直接在 Markdown 中包上 `<span style="color:...">`。
-
-#### Magic 3 – AI Summary
-
-- Agent：`summary_entities_agent` or `note_summary` 使用預設模型。  
-- 輸出：
-  - 主管用摘要 bullet  
-  - 一段整體情況概述  
-
-#### Magic 4 – AI Action Items
-
-- Agent：`note_action_items_agent`  
-- 產出待辦/補件/內部會議等行動清單表格。
-
-#### Magic 5 – AI Glossary & Entities
-
-- Agents：`note_glossary_agent`, `note_entity_table_agent`, `note_gap_finder_agent`  
-- 功能：  
-  - 術語表（中英文對照、說明）  
-  - 20+ 個關鍵實體表（實體、類型、上下文、審查相關性）  
-  - 法規與資料缺口分析  
+## SKILL:FDA_RTA_LOGIC
+**目的**：RTA 初審「受理要件」風格輸出。  
+**做法**：
+- 把 submission 拆成章節與附件類別（行政資訊、描述、標示、測試、風險等）
+- 對每一類標示「是否看到」與「缺口」
+- 提出「最小補件」而非泛泛而談
 
 ---
 
-### 2.7 Agents Config
-
-- 以表格方式展示目前 `agents.yaml` 中所有代理。  
-- 提供：
-  - 原始 YAML 編輯器  
-  - 上傳/下載 agents.yaml  
-- 允許你在 UI 中調整：
-  - name / category / description  
-  - model / temperature / max_tokens  
-  - system_prompt / user_prompt_template  
+## SKILL:FDA_SE_ARGUMENT
+**目的**：協助 SE（Substantial Equivalence）論證/審查。  
+**核心檢核**：
+1. Intended Use 是否相同/可比  
+2. 技術特徵是否相同；若不同 → 是否引入新問題？  
+3. 證據是否足夠彌補差異（bench/軟體/臨床/風險/標示）  
+**輸出**：差異表 + 新問題判讀 + 需要的證據清單。
 
 ---
 
-## 3. Agents 能力總覽（31 個）
-
-> 下列為 `agents.yaml` 中的主要代理，按主題分類。
-
-### 3.1 FDA 510(k) 與通用文件
-
-1. **fda_510k_intel_agent**  
-   - 510(k) 情資彙總與多表格摘要。
-
-2. **k510_summary_structurer_agent**  
-   - 將 510(k) Summary 重整為標準章節 Markdown。
-
-3. **k510_entity_extractor_agent**  
-   - 抽取 device name, K number, product code, predicates, tests, standards 等欄位。
-
-4. **k510_diff_agent**  
-   - 新舊版本比較，特別針對適應症與技術、測試變更。
-
-5. **summary_entities_agent**  
-   - 對大型文件做長篇摘要 + 多欄位實體表格。
-
-6. **risk_register_agent**  
-   - 風險與行動登錄表 (Risk Register)。
-
-7. **benefit_risk_agent**  
-   - 利益-風險摘要段落（供內部 memo 使用）。
-
-8. **standard_mapping_agent**  
-   - 測試項目 ↔ 標準 (IEC/ISO 等) 對照表。
-
-9. **software_cybersecurity_agent**  
-   - 軟體確效與網路安全資料整理與完整性檢視。
-
-10. **emc_safety_agent**  
-    - 電氣安全與 EMC 測試資料整理與缺漏檢視。
-
-11. **biocompatibility_agent**  
-    - 生物相容性資料依 ISO 10993 架構表示與簡要評估。
-
-12. **labeling_translation_agent**  
-    - 中英文標籤/說明書對照、翻譯與不一致標註。
-
-13. **regulatory_strategy_agent**  
-    - 高階全球註冊策略摘要（FDA / TFDA / EU MDR）。
-
-14. **review_memo_builder**  
-    - 將 checklist 與審查結果整合成正式審查報告草稿。
-
-15. **guidance_to_checklist_converter**  
-    - 將法規/技術指引轉成審查清單。
-
-16. **dynamic_agent_generator**  
-    - 讀取指引 + 現有 agents.yaml，產生新的專用代理 YAML 片段。
+## SKILL:PREDICATE_COMPARISON_TABLE
+**目的**：predicate 對照表模板。  
+**表格欄位**：
+- 特徵（材料、能量源、軟體、介面、使用流程…）
+- 本產品 / Predicate / 差異 / 可能新風險 / 所需驗證
 
 ---
 
-### 3.2 TFDA 第二、三等級查驗登記專用
-
-17. **tw_screen_review_agent**  
-    - 形式審查（預審）代理，產出預審報告與缺漏清單。
-
-18. **tw_app_doc_helper**  
-    - 協助撰寫與優化 TFDA 查驗登記申請書內容。
-
-19. **tw_qms_checker_agent**  
-    - QMS/QSD 證明文件與申請人/製造廠一致性檢查。
-
-20. **tw_labeling_checker_agent**  
-    - TFDA 標籤與中文說明書載明事項檢核。
-
-21. **tw_preclinical_checker_agent**  
-    - 臨床前測試 + 品質管制資料之完整性檢視。
-
-22. **tw_clinical_evidence_agent**  
-    - 臨床證據摘要與初步 sufficiency 評估。
+## SKILL:INDICATIONS_LABELING_CONSISTENCY
+**目的**：Indications、IFU、宣稱一致性。  
+**檢核**：
+- 適應症是否含族群、部位、用途、限制條件  
+- IFU 是否支持適應症（步驟、警語、禁忌）  
+- 宣稱是否超出輸入證據  
+**輸出**：不一致清單 + 最小改動修正建議。
 
 ---
 
-### 3.3 Note Keeper & Magics
-
-23. **note_structurer_agent**  
-    - 將零散筆記整理成結構化 Markdown。
-
-24. **note_ai_formatting_agent**  
-    - 純版面與結構優化（不改變內容）。
-
-25. **note_keywords_agent**  
-    - 抽出關鍵字與建議著色。
-
-26. **note_action_items_agent**  
-    - 抽出所有待辦與補件行動項目。
-
-27. **note_glossary_agent**  
-    - 建立中英文術語表。
-
-28. **note_entity_table_agent**  
-    - 至少 20 個關鍵實體表格。
-
-29. **note_gap_finder_agent**  
-    - 從筆記中找出法規與資料缺口。
-
-30. **pdf_to_markdown_agent**  
-    - PDF 文字 → 清潔 Markdown 前處理。
-
-31. **reviewer_chat_agent**  
-    - 在單一案件上下文中提供 QA Chat，回答審查員問題並指引相關段落。
+## SKILL:DEVICE_DESCRIPTION_SCHEMA
+**目的**：裝置描述標準化架構。  
+**建議章節**：
+- 系統概述、工作原理、主要組件、材料/接觸部位、軟體/韌體、配件耗材、使用流程、關鍵規格、適用環境、禁忌/警語（若有）
 
 ---
 
-## 4. 推薦使用情境與鏈接 (Chaining) 範例
-
-### 4.1 TFDA 新案預審
-
-1. 在 **TW Premarket** tab 線上填寫申請書 → 產生 Markdown。  
-2. 上傳/貼上 **預審指引**。  
-3. 呼叫 `tw_screen_review_agent` → 預審報告。  
-4. 若申請書文本需改善 → `tw_app_doc_helper`。  
-5. 若同時要檢視 QMS/標籤/臨床前測試 → `tw_qms_checker_agent`, `tw_labeling_checker_agent`, `tw_preclinical_checker_agent`, `tw_clinical_evidence_agent`。  
-
-### 4.2 FDA 510(k) 深度審查
-
-1. 使用 `pdf_to_markdown_agent` 將 510(k) Summary 或技術文件轉 markdown。  
-2. 使用 `k510_summary_structurer_agent` 重整為標準章節。  
-3. 使用 `k510_entity_extractor_agent` 抽關鍵欄位與表格。  
-4. 若有舊版本文件 → `k510_diff_agent` 比對。  
-5. 根據對應指引 → `guidance_to_checklist_converter` 建立 checklist。  
-6. 使用 `review_memo_builder` 建立審查報告草稿。  
-7. 全程可用 `note_structurer_agent` / `note_action_items_agent` / `note_glossary_agent` 管理內部筆記。  
+## SKILL:PERFORMANCE_TEST_MATRIX
+**目的**：性能測試矩陣。  
+**表格欄位**：
+- 測試名稱 / 類別 / 依據標準或方法 / 樣本與條件 / 接受標準 / 結果摘要（若有）/ 是否足夠 / 缺口
 
 ---
 
-## 5. 實務建議（給審查官）
+## SKILL:ISO10993_PLANNING
+**目的**：生物相容性規劃（ISO 10993）。  
+**最小輸入需求**：
+- 接觸類型（皮膚/黏膜/血液/植入等）
+- 接觸時間（短暫/長期/永久）
+- 材料與加工（若未知則列需補）  
+**輸出**：接觸分類 → 可能評估項 → 證據缺口與問題。
 
-- **控制上下文長度**：  
-  - 重要技術檔案建議先用 PDF → Markdown + 剪成幾個區塊再送入 agent。  
-- **明確告知案件性質**：  
-  - Prompt 中明說：「此案為 TFDA 第二等級 IVD」、「此案為 FDA 510(k) 傳統申請」有助於模型選擇正確語氣與重點。  
-- **善用 Note Keeper**：  
-  - 每個案件使用一份 Note，將不同 agent 的輸出片段貼入，最後再用 AI Summary / Risk Register 做收斂。  
-- **避免過度依賴 LLM 作「實質決策」**：  
-  - 模型適合作為「整理與提示」，真正的批准/不批准、補件要求仍需由審查官判斷。  
+---
+
+## SKILL:STERILIZATION_REVIEW
+**目的**：滅菌審查通用框架。  
+**檢核**：
+- 滅菌方式、SAL、參數、負載配置、放行方法
+- 包裝/無菌屏障、封口完整性
+- EO 殘留或輻照劑量（依方式）
+- 再滅菌/重複使用（如適用）
+**輸出**：需求清單 + 缺口 + 問題。
+
+---
+
+## SKILL:SHELF_LIFE_STABILITY
+**目的**：效期主張與安定性證據。  
+**檢核**：
+- 效期主張是否與包裝/滅菌/材料相容
+- 加速老化 vs 實時老化
+- 運輸模擬、封口完整性、功能維持
+**輸出**：證據矩陣 + 缺口。
+
+---
+
+## SKILL:PACKAGING_ISO11607
+**目的**：包裝系統與運輸驗證。  
+**檢核**：
+- 無菌屏障系統描述、材料、封口方式
+- ISO 11607 對應證據（如封口強度、完整性、老化後性能）
+- 運輸測試（ISTA 類）若適用  
+**輸出**：證據清單 + 缺口。
+
+---
+
+## SKILL:IEC62304_DOC_SET
+**目的**：IEC 62304 軟體文件套件審查。  
+**最小文件清單**：
+- 軟體描述、架構、SRS、風險控制追溯
+- V&V 計畫與報告、SOUP 清單、版本與變更控制
+- 已知問題與殘餘風險  
+**輸出**：文件缺口表 + 審查問題。
+
+---
+
+## SKILL:CYBERSECURITY_REVIEW
+**目的**：資安審查框架。  
+**檢核**：
+- 介面/連線、身份驗證與授權、加密、更新與補丁、日誌、事件回報
+- 第三方元件與 SBOM
+- 威脅模型/風險評估與測試（滲測、弱掃）  
+**輸出**：資安審查表 + 缺口 + 提問。
+
+---
+
+## SKILL:CLINICAL_EVIDENCE_LOGIC
+**目的**：臨床證據合理性與缺口。  
+**檢核**：
+- 研究設計（前瞻/回溯、對照、盲法）
+- 族群與納排、終點、偏倚、統計
+- 外部證據/文獻與可比性  
+**輸出**：證據摘要 + 可信度評估 + 缺口。
+
+---
+
+## SKILL:STATS_REVIEW
+**目的**：統計與研究設計審查。  
+**檢核**：
+- 假設與主要終點是否匹配
+- 樣本數推導（若無→缺口）
+- 多重比較、缺失值處理、敏感度分析  
+**輸出**：表格列出「已提供/未提供」。
+
+---
+
+## SKILL:HFE_IEC62366
+**目的**：人因/可用性工程審查。  
+**檢核**：
+- 使用者族群、使用環境、關鍵任務
+- 使用錯誤與危害連結、Formative/Summative 設計
+- IFU 與訓練需求  
+**輸出**：可用性證據需求 + 缺口。
+
+---
+
+## SKILL:IEC60601_1_REVIEW
+**目的**：IEC 60601-1 電氣安全審查。  
+**檢核**：
+- 裝置分類、供電方式、關鍵章節測試
+- 測試報告可追溯性（型號/配置/軟體版本）
+**輸出**：證據需求 + 缺口。
+
+---
+
+## SKILL:IEC60601_1_2_EMC
+**目的**：EMC 證據審查。  
+**檢核**：
+- 測試環境與等級、性能準則、免測理由
+- 配置、線材、最差情境  
+**輸出**：表格 + 缺口。
+
+---
+
+## SKILL:ISO14971_REVIEW
+**目的**：ISO 14971 風險管理審查。  
+**檢核**：
+- 危害 → 情境 → 傷害 → 控制 → 驗證 → 殘餘風險
+- 風險控制是否落地到設計/標示/流程
+- 追溯矩陣是否完整  
+**輸出**：風險架構摘要 + 缺口 + 問題。
+
+---
+
+## SKILL:LABELING_21CFR801
+**目的**：標示/IFU 要素檢核。  
+**檢核**：
+- 適應症、禁忌、警語注意事項、操作步驟、儲存、一次性/滅菌資訊
+- 宣稱是否超出證據（僅依輸入判斷）  
+**輸出**：檢核表 + 建議修訂。
+
+---
+
+## SKILL:CLAIMS_BOUNDARY
+**目的**：宣稱邊界與誤導風險。  
+**做法**：
+- 抽取高風險語句（療效暗示、過度保證、超適應症）
+- 建議保守替代語句（最小改動）  
+**輸出**：引用/風險原因/修訂建議。
+
+---
+
+## SKILL:BENEFIT_RISK_NARRATIVE
+**目的**：利益-風險敘事（草案）。  
+**輸出**：
+- 受益與證據來源（引用輸入）
+- 主要風險與控制
+- 不確定性與需補之證據
+
+---
+
+## SKILL:QUESTION_CRAFTING
+**目的**：把缺口轉成「可回覆」的問題。  
+**每題需包含**：
+- 缺口背景（引用）
+- 要求提供的具體文件/資料
+- 期望格式（表格/報告/數據欄位）
+- 為何需要（審查理由）
+
+---
+
+## SKILL:FDA_REVIEW_MEMO_TEMPLATE
+**目的**：內部 Review Memo 模板。  
+**章節**：
+1) 背景與範圍  
+2) 裝置概述與適應症  
+3) Predicate 與 SE 觀點  
+4) 主要審查面向（測試/風險/軟體/標示）  
+5) 缺口與建議（含對外問題）
+
+---
+
+## SKILL:EXEC_ONE_PAGER
+**目的**：一頁式摘要。  
+**格式**：
+- 關鍵結論（5–10 bullets）
+- 最高風險缺口（Top 5）
+- 下一步（Top 5 問題/補件）
+
+---
+
+## SKILL:TRACEABILITY_MATRIX
+**目的**：需求↔證據追溯。  
+**表格**：Requirement | Evidence | Coverage | Gap | Question
+
+---
+
+## SKILL:RISK_REGISTER_TABLE
+**目的**：風險登錄表。  
+**表格**：Hazard | Sequence | Harm | Severity | Probability | Control | V&V | Residual note
+
+---
+
+## SKILL:CHANGELOG_COMPARE
+**目的**：文件版本比較與變更風險。  
+**輸出**：摘要、合規影響、段落敘事、建議變更說明。
+
+---
+
+## SKILL:PDF_TO_MD
+**目的**：PDF 抽取文字後結構化。  
+**規則**：
+- 保留原文、不補寫
+- 盡可能保留標題階層與條列
+- 表格可合理重建，不能則註記簡化
+
+---
+
+## SKILL:TFDA_SCREEN_REVIEW
+**目的**：TFDA 預審形式審查輸出框架。  
+**輸出**：文件完整性表格、欄位矛盾、補件清單、預審摘要。
+
+---
+
+## SKILL:TFDA_DOC_POLISH
+**目的**：TFDA 文件文字潤飾但不新增事實。  
+**規則**：
+- 不新增關鍵資訊
+- 不確定處以「※待補」標示
+- 輸出 Markdown
